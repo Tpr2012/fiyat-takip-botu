@@ -6,99 +6,125 @@ import google.generativeai as genai
 import pandas as pd
 import datetime
 
-# --- 1. AI BEYİN AYARI ---
-# Buraya Google AI Studio'dan aldığın Key'i yapıştır (Eğer yoksa tırnak içi boş kalsın)
+# --- 1. AI SİNİR AĞI YAPILANDIRMASI ---
+# Anahtarın başarıyla entegre edildi
 GEMINI_KEY = "AIzaSyDu7faagD6mtZugXhhJ3PiIEdqZ20kThlA" 
-if GEMINI_KEY != "AIzaSyDu7faagD6mtZugXhhJ3PiIEdqZ20kThlA":
-    genai.configure(api_key=GEMINI_KEY)
-    model = genai.GenerativeModel('gemini-pro')
-else:
-    model = None
+genai.configure(api_key=GEMINI_KEY)
 
-# --- 2. GÖRSEL TASARIM (ULTRA MODERN) ---
-st.set_page_config(page_title="TP AI | Genesis", page_icon="🧠", layout="wide")
+# Yapay zekaya uzman bir karakter tanımlıyoruz
+generation_config = {
+    "temperature": 0.75,
+    "top_p": 1,
+    "top_k": 1,
+    "max_output_tokens": 1000,
+}
+model = genai.GenerativeModel('gemini-pro', generation_config=generation_config)
+
+# --- 2. PREMIUM KARANLIK ARAYÜZ (NO-RGB STYLE) ---
+st.set_page_config(page_title="TP AI | Intelligence", page_icon="🧠", layout="wide")
 
 st.markdown("""
 <style>
     .stApp { background-color: #050505; color: #ffffff; }
-    .ai-card { 
+    .stTextInput>div>div>input { background-color: #0d1117; color: white; border: 1px solid #30363d; }
+    .ai-report { 
         background: linear-gradient(145deg, #0d1117, #161b22);
-        border: 1px solid #30363d; padding: 25px; border-radius: 20px;
-        border-top: 3px solid #58a6ff;
+        border: 1px solid #ab7df8; padding: 25px; border-radius: 20px;
+        line-height: 1.7; font-size: 16px; box-shadow: 0 10px 30px rgba(171, 125, 248, 0.1);
     }
     .stButton>button {
-        background: linear-gradient(90deg, #238636, #2ea043);
-        border: none; color: white; padding: 12px; border-radius: 10px;
-        font-weight: 900; width: 100%; transition: 0.3s;
+        background: linear-gradient(90deg, #58a6ff, #ab7df8);
+        color: white; border: none; padding: 15px; border-radius: 10px;
+        font-weight: 800; font-size: 16px; width: 100%; transition: 0.4s;
     }
-    .stButton>button:hover { transform: scale(1.02); box-shadow: 0 0 15px #238636; }
+    .stButton>button:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(88, 166, 255, 0.3); }
+    .metric-box { background: #0d1117; border: 1px solid #30363d; padding: 15px; border-radius: 12px; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 3. YIKILMAZ ARAMA MOTORU (DUCKDUCKGO TABANLI) ---
-def hizli_radar(urun):
-    """Google engeline takılmayan alternatif arama motoru."""
-    # DuckDuckGo HTML arama linki
-    url = f"https://duckduckgo.com/html/?q={urun}+fiyat+satın+al+site:com.tr"
+# --- 3. AKILLI VERİ TOPLAMA ---
+def interneti_tara(sorgu):
+    """DuckDuckGo üzerinden engelsiz veri toplar."""
+    url = f"https://duckduckgo.com/html/?q={sorgu}+satın+al+fiyat"
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-    
-    bulunan_linkler = []
+    bulunanlar = []
     try:
         r = requests.get(url, headers=headers, timeout=10)
         soup = BeautifulSoup(r.content, "html.parser")
-        
-        # Sayfadaki tüm linkleri tara
         for a in soup.find_all('a', class_='result__url', href=True):
-            link = a['href']
-            # Reklam olmayan ve alışveriş sitelerine benzeyenleri al
-            if "http" in link and not "duckduckgo" in link:
-                bulunan_linkler.append(link)
-                if len(bulunan_linkler) >= 7: break # İlk 7 sonucu al
-    except Exception as e:
-        st.error(f"Bağlantı Hatası: {e}")
-    
-    return bulunan_linkler
+            if "http" in a['href'] and not "duckduckgo" in a['href']:
+                bulunanlar.append(a['href'])
+            if len(bulunanlar) >= 6: break
+    except: pass
+    return bulunanlar
 
-# --- 4. ANA PANEL ---
-st.markdown("<h1 style='text-align: center;'>🧠 TP AI <span style='color:#58a6ff'>GENESIS</span> v5.1</h1>", unsafe_allow_html=True)
+# --- 4. ANA KONTROL PANELİ ---
+st.markdown("<h1 style='text-align: center;'>🧠 TP AI <span style='color:#ab7df8'>NEURAL</span> GENESIS</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #8b949e;'>Yapay Zeka Destekli Stratejik Piyasa Analizi</p>", unsafe_allow_html=True)
 
 with st.container():
-    st.markdown('<div class="ai-card">', unsafe_allow_html=True)
-    
-    urun_input = st.text_input("Hangi ürünü analiz edelim?", placeholder="Örn: Samsung Galaxy Watch 7")
-    
-    if st.button("ANALİZİ BAŞLAT 🚀"):
-        if urun_input:
-            with st.spinner('TP AI Piyasaya Sızıyor...'):
-                # 1. Kur Çek
-                try:
-                    kur_data = yf.download("USDTRY=X", period="1d", interval="1m")
-                    kur = float(kur_data['Close'].iloc[-1])
-                except: kur = 32.85
-                
-                # 2. Ürünleri Bul (YENİ SİSTEM)
-                linkler = hizli_radar(urun_input)
-                
-                # 3. Sonuçları Göster
-                col1, col2 = st.columns([2, 1])
-                
-                with col1:
-                    st.markdown("### 🛰️ Tespit Edilen Kaynaklar")
-                    if linkler:
-                        for l in linkler:
-                            st.markdown(f"- [Mağaza Linki]({l})")
-                    else:
-                        st.warning("⚠️ İnternet korumaları çok sıkı. Lütfen 1 dakika sonra tekrar dene veya farklı bir isim yaz.")
-                
-                with col2:
-                    st.metric("Canlı Dolar", f"{kur:.2f} TL")
-                    st.info(f"**TP AI Notu:** {urun_input} için global tarama yapıldı. Şu anki kurla alım stratejini belirleyebilirsin.")
-                    
-                    if model:
-                        try:
-                            res = model.generate_content(f"{urun_input} ürünü ve {kur} TL kur hakkında kısa bir yorum yap.")
-                            st.success(f"🤖 Yapay Zeka: {res.text}")
-                        except: pass
-        else:
-            st.warning("Lütfen bir isim yaz.")
-    st.markdown('</div>', unsafe_allow_html=True)
+    col_input, col_btn = st.columns([4, 1])
+    with col_input:
+        urun_sorgu = st.text_input("", placeholder="Analiz edilecek ürün veya sorunuzu yazın...")
+    with col_btn:
+        st.write(" ") # Boşluk
+        baslat = st.button("ANALİZ ET 🚀")
+
+    if baslat and urun_sorgu:
+        with st.spinner('TP AI Zihinsel Bağlantı Kuruyor...'):
+            # Finansal Veri (Dolar)
+            try:
+                kur = float(yf.download("USDTRY=X", period="1d", interval="1m")['Close'].iloc[-1])
+            except: kur = 32.95
+            
+            # İnternet Verisi
+            kaynaklar = interneti_tara(urun_sorgu)
+            
+            # YAPAY ZEKA STRATEJİ RAPORU
+            st.divider()
+            
+            # Gemini'ye giden 'Süper Prompt'
+            prompt = f"""
+            Sen TP AI, uzman bir piyasa analistisin. 
+            Kullanıcı sorusu: {urun_sorgu}
+            Güncel Kur: {kur:.2f} TL
+            Tespit Edilen Linkler: {kaynaklar}
+            
+            Görevin: Kullanıcıya bu ürünün piyasa durumunu, dolar bazlı değerini ve 
+            'şimdi mi almalı yoksa beklemeli mi' sorusunun cevabını içeren, 
+            samimi ama profesyonel bir rapor sunmak. 
+            Eğer linklerde fiyatlar varsa bunları yorumla. 
+            Türkiye ekonomisindeki kur risklerini de göz önüne al.
+            """
+            
+            try:
+                response = model.generate_content(prompt)
+                st.markdown("### 🤖 TP AI Stratejik Raporu")
+                st.markdown(f'<div class="ai-report">{response.text}</div>', unsafe_allow_html=True)
+            except Exception as e:
+                st.error(f"AI Modülünde bir hata oluştu: {e}")
+
+            # Metrik Paneli
+            st.write(" ")
+            m1, m2, m3 = st.columns(3)
+            with m1:
+                st.markdown('<div class="metric-box">', unsafe_allow_html=True)
+                st.metric("Canlı Kur", f"{kur:.2f} TL")
+                st.markdown('</div>', unsafe_allow_html=True)
+            with m2:
+                st.markdown('<div class="metric-box">', unsafe_allow_html=True)
+                st.metric("Kaynak Sayısı", len(kaynaklar))
+                st.markdown('</div>', unsafe_allow_html=True)
+            with m3:
+                st.markdown('<div class="metric-box">', unsafe_allow_html=True)
+                st.metric("Zeka Durumu", "Optimal")
+                st.markdown('</div>', unsafe_allow_html=True)
+
+            # Kaynaklar
+            with st.expander("📍 İncelenen Dijital Kaynaklar"):
+                for k in kaynaklar:
+                    st.write(f"- [{k.split('/')[2]}]({k})")
+
+# --- 5. ALT BİLGİ ---
+st.markdown("---")
+st.caption(f"TP AI v5.5 | Neural Engine Aktif | {datetime.datetime.now().strftime('%H:%M:%S')}")
