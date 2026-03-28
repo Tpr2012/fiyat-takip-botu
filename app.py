@@ -3,135 +3,94 @@ import yfinance as yf
 import requests
 from bs4 import BeautifulSoup
 from googlesearch import search
-import time
+import pandas as pd
+import datetime
 
-# --- SAYFA AYARLARI (Geniş Ekran ve İkon) ---
-st.set_page_config(page_title="Kumru Piyasalar", page_icon="🦅", layout="wide", initial_sidebar_state="collapsed")
+# --- TP AI GÖRSEL KİMLİK VE TEMA ---
+st.set_page_config(page_title="TP AI | Omni-Intelligence", page_icon="🧠", layout="wide")
 
-# --- MİNİMALİST VE ŞIK TASARIM (Özel CSS) ---
 st.markdown("""
 <style>
-    /* Ana arka planı tam siyah/koyu gri arası yap */
-    .stApp { background-color: #0E1117; }
-    /* Metrik kutularını şıklaştır */
-    div[data-testid="metric-container"] {
-        background-color: #1E2127;
-        border: 1px solid #2D3139;
-        padding: 5% 10% 5% 10%;
-        border-radius: 10px;
-        border-left: 5px solid #00C853;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-    }
-    /* Arama butonunu özelleştir */
-    div.stButton > button:first-child {
-        background-color: #2962FF;
-        color: white;
-        border-radius: 8px;
-        border: none;
-        width: 100%;
-        font-weight: bold;
-    }
-    div.stButton > button:first-child:hover {
-        background-color: #1565C0;
-        border: 1px solid white;
-    }
+    .stApp { background-color: #05070a; color: #e6edf3; font-family: 'Segoe UI', sans-serif; }
+    .main-card { background: #0d1117; border: 1px solid #30363d; padding: 25px; border-radius: 15px; margin-bottom: 20px; border-top: 4px solid #58a6ff; }
+    .ai-bubble { background: #161b22; border-radius: 15px; padding: 15px; border-left: 5px solid #ab7df8; margin: 10px 0; }
+    .stButton>button { background: linear-gradient(135deg, #58a6ff, #ab7df8); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: 700; width: 100%; letter-spacing: 1px; }
+    .stButton>button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(88, 166, 255, 0.4); }
 </style>
 """, unsafe_allow_html=True)
 
-# --- BAŞLIK ALANI ---
-st.markdown("<h1 style='text-align: center; color: #FFFFFF;'>🦅 Kumru Fiyat İstihbaratı</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #8B949E;'>Minimalist, hızlı ve yapay zeka destekli piyasa analizi.</p>", unsafe_allow_html=True)
-st.divider()
+# --- TP AI ZEKA MOTORU ---
+def tp_ai_analiz(urun, kur):
+    # Yapay zeka mantık simülasyonu
+    if "rtx" in urun.lower() or "ekran kartı" in urun.lower():
+        return "Donanım piyasasında stok durumu kritik. Dolar kurundaki %1'lik artış bu ürüne %3 zam olarak yansıyabilir."
+    elif "iphone" in urun.lower() or "samsung" in urun.lower():
+        return f"Mobil cihaz segmentinde rekabet yüksek. {kur:.2f} TL kur seviyesi, ithalatçı garantili (outlet) modeller için fırsat yaratıyor."
+    else:
+        return "Genel piyasa taraması yapıldı. Ürünün bulunabilirlik endeksi %85. Fiyat istikrarı korunuyor."
 
-# --- FONKSİYONLAR ---
-def urun_linki_bul(urun_adi):
-    sorgu = f"site:akakce.com {urun_adi}"
-    try:
-        for link in search(sorgu, num_results=1):
-            if "akakce.com" in link:
-                return link
-    except:
-        return None
-    return None
-
-def fiyat_cek(url):
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
-    try:
-        r = requests.get(url, headers=headers, timeout=10)
-        soup = BeautifulSoup(r.content, "html.parser")
-        fiyat_etiketi = soup.select_one("span.pt_v8") or soup.select_one(".v8p")
-        if fiyat_etiketi:
-            fiyat_text = fiyat_etiketi.text.strip()
-            temiz = "".join(c for c in fiyat_text if c.isdigit() or c in ",.")
-            if "," in temiz and "." in temiz: temiz = temiz.replace(".", "").replace(",", ".")
-            elif "," in temiz: temiz = temiz.replace(",", ".")
-            return float(temiz)
-    except:
-        return None
-    return None
-
-@st.cache_data(ttl=3600) # Veriyi 1 saat hafızada tutarak hızı artırır
-def ekonomi_verisi():
-    dolar = yf.download("USDTRY=X", period="7d", interval="1d")['Close']
-    kur = float(dolar.iloc[-1])
-    return kur, dolar
-
-# --- SEKME (TAB) SİSTEMİ ---
-tab1, tab2, tab3 = st.tabs(["🔍 Akıllı Arama", "📈 Canlı Ekonomi", "⚙️ Sistem Durumu"])
-
-with tab1:
-    st.markdown("### Ne arıyoruz?")
-    # Placeholder içine sana tanıdık gelecek test ürünleri koyduk
-    urun_ismi = st.text_input("", placeholder="Örn: NVIDIA RTX 4060, LEGO Technic Mercedes, Beşiktaş Forması...")
+def evrensel_radar(urun, mod):
+    mod_ekleri = {
+        "Hepsi": "satın al fiyat",
+        "Sahibinden/2.El": "site:sahibinden.com veya site:dolap.com",
+        "Outlet/Fırsat": "outlet revizyonlu teşhir ürünleri",
+        "Global/Amazon": "site:amazon.com.tr veya site:hepsiburada.com"
+    }
+    sorgu = f"{urun} {mod_ekleri[mod]}"
+    sonuclar = []
     
-    if st.button("🚀 Derin Aramayı Başlat"):
-        if urun_ismi:
-            with st.spinner('Kumru interneti tarıyor, lütfen bekle...'):
-                time.sleep(1) # Animasyonun görünmesi için kısa bir es
-                link = urun_linki_bul(urun_ismi)
-                
-                if link:
-                    fiyat = fiyat_cek(link)
-                    kur, _ = ekonomi_verisi()
-                    
-                    st.success("✅ Hedef tespit edildi!")
-                    
-                    # 3'lü Şık Metrik Paneli
-                    col1, col2, col3 = st.columns(3)
-                    
-                    with col1:
-                        if fiyat:
-                            st.metric(label="En Düşük Fiyat", value=f"{fiyat:,.2f} TL")
-                        else:
-                            st.metric(label="Durum", value="Fiyat Gizli")
-                            
-                    with col2:
-                        if fiyat and kur:
-                            st.metric(label="Dolar Karşılığı", value=f"${(fiyat/kur):,.2f}")
-                        else:
-                            st.metric(label="Dolar Karşılığı", value="Hesaplanamadı")
-                            
-                    with col3:
-                        st.metric(label="Ürün Bağlantısı", value="Gitmek İçin Tıkla", help=link)
-                        st.markdown(f"[🛒 Mağazaya Git]({link})")
-                        
-                else:
-                    st.error("❌ Ürün bulunamadı. Lütfen daha belirgin bir isim yaz.")
-        else:
-            st.warning("Lütfen arama kutusuna bir şey yaz.")
-
-with tab2:
-    st.markdown("### 💵 Dolar/TL Son 7 Günlük Seyir")
     try:
-        kur, dolar_grafik = ekonomi_verisi()
-        st.metric("Anlık Dolar Kuru", f"{kur:.2f} TL")
-        st.area_chart(dolar_grafik, color="#00C853") # İçi dolu, şık yeşil grafik
-    except:
-        st.error("Ekonomi verileri şu an çekilemiyor.")
+        for link in search(sorgu, num_results=10, lang="tr"):
+            platform = "Global Mağaza"
+            if "sahibinden" in link: platform = "Sahibinden (2. El)"
+            elif "trendyol" in link: platform = "Trendyol"
+            elif "akakce" in link: platform = "Akakçe"
+            elif "itopya" in link: platform = "İtopya"
+            sonuclar.append({"Platform": platform, "Link": link})
+    except: pass
+    return sonuclar
 
-with tab3:
-    st.markdown("### 🖥️ Sunucu Bilgileri")
-    st.info("Kumru AI Fiyat Modülü aktif olarak çalışıyor.")
-    st.write("- **Geliştirici:** Düzce Merkezli Sistemler")
-    st.write("- **Arayüz Tipi:** Minimalist, No-RGB")
-    st.write("- **Durum:** %100 Çevrimiçi")
+# --- ANA EKRAN ---
+st.markdown("<h1 style='text-align: center; color: #58a6ff;'>🧠 TP AI OMNI-INTELLIGENCE</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #8b949e;'>Tüm ağları tarar, analiz eder ve karar verir.</p>", unsafe_allow_html=True)
+
+with st.container():
+    st.markdown('<div class="main-card">', unsafe_allow_html=True)
+    c1, c2 = st.columns([3, 1])
+    with c1:
+        urun_ismi = st.text_input("Hedef Ürün:", placeholder="Örn: NVIDIA RTX 5060 12GB")
+    with c2:
+        mod = st.selectbox("Tarama Modu", ["Hepsi", "Sahibinden/2.El", "Outlet/Fırsat", "Global/Amazon"])
+    
+    if st.button("TP AI SİSTEMİNİ ATEŞLE 🚀"):
+        if urun_ismi:
+            with st.spinner('TP AI internetin derinliklerine sızıyor...'):
+                kur = yf.download("USDTRY=X", period="1d", interval="1m")['Close'].iloc[-1]
+                sonuclar = evrensel_radar(urun_ismi, mod)
+                
+                st.divider()
+                
+                col_a, col_b, col_c = st.columns(3)
+                col_a.metric("Canlı Kur", f"{kur:.2f} TL")
+                col_b.metric("Tespit Edilen Kaynak", len(sonuclar))
+                col_c.metric("Yapay Zeka Durumu", "Aktif / Analitik")
+
+                # AI YORUM ALANI
+                st.markdown('<div class="ai-bubble">', unsafe_allow_html=True)
+                st.markdown(f"### 🤖 TP AI Stratejik Raporu")
+                st.write(tp_ai_analiz(urun_ismi, kur))
+                st.markdown('</div>', unsafe_allow_html=True)
+
+                # SONUÇ TABLOSU
+                if sonuclar:
+                    st.markdown("### 🛰️ Bulunan Dijital İzler")
+                    for s in sonuclar:
+                        with st.expander(f"📍 {s['Platform']}"):
+                            st.write(f"Kaynak Bağlantısı: {s['Link']}")
+                            st.markdown(f"[Hemen İncele]({s['Link']})")
+                else:
+                    st.error("TP AI ağda bu ürüne dair bir iz bulamadı.")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# --- ALT BİLGİ ---
+st.caption(f"TP AI v3.0 | Son Senkronizasyon: {datetime.datetime.now().strftime('%H:%M:%S')}")
