@@ -18,7 +18,8 @@ generation_config = {
     "top_k": 1,
     "max_output_tokens": 1000,
 }
-model = genai.GenerativeModel('gemini-pro', generation_config=generation_config)
+# 'gemini-1.5-flash' hem daha hızlıdır hem de şu an en güncel stabil sürümdür.
+model = genai.GenerativeModel('gemini-1.5-flash', generation_config=generation_config)
 
 # --- 2. PREMIUM KARANLIK ARAYÜZ (NO-RGB STYLE) ---
 st.set_page_config(page_title="TP AI | Intelligence", page_icon="🧠", layout="wide")
