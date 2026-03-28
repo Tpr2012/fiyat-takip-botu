@@ -1,5 +1,4 @@
 google-generativeai
-googlesearch-python
 yfinance
 streamlit
 requests
