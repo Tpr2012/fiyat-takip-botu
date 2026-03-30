@@ -7,7 +7,7 @@ import time
 
 # --- 1. AI ÇEKİRDEK YAPILANDIRMASI ---
 # Senin sağladığın Özel API Key
-API_KEY = "gen-lang-client-0837987196"
+API_KEY = "AIzaSyBPTkFQ78pZu_Snj0vK3G4Jk-dx5bqWpoY"
 genai.configure(api_key=API_KEY)
 
 # Sistem Talimatı: Yapay zekanın "Kişiliği"
